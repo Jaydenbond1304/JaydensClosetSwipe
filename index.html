@@ -1,0 +1,152 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Jayden's Closet Swipe</title>
+  <style>
+    /* Embedded CSS styles */
+    body {
+      margin: 0;
+      font-family: 'Poppins', sans-serif;
+      background-color: #f5f6fa;
+      color: #333;
+    }
+    header {
+      background: linear-gradient(90deg, #4e54c8, #8f94fb);
+      color: white;
+      padding: 1rem;
+      text-align: center;
+      font-size: 1.5rem;
+      font-weight: bold;
+    }
+    .section {
+      padding: 1rem;
+    }
+    .hidden {
+      display: none;
+    }
+    .modal {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.75);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      padding: 2rem;
+      z-index: 10;
+      text-align: center;
+    }
+    .closet-item img {
+      max-width: 100px;
+      max-height: 100px;
+      object-fit: contain;
+    }
+    .swipe-container {
+      margin-top: 1rem;
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    .swipe-card {
+      width: 150px;
+      height: 150px;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="welcomeModal" class="modal">
+    <h2>Welcome to Jayden's Closet Swipe 👕</h2>
+    <p>Swipe left/right on clothing cards to build your outfit.</p>
+    <p>Items are sorted by category and subcategory (e.g., t-shirts, jeans, sneakers).</p>
+    <p>This is a beta version. Report bugs to <b>jaydenbond1304@gmail.com</b></p>
+    <button onclick="closeWelcome()">Start</button>
+  </div>
+
+  <header>Jayden's Closet Swipe</header>
+
+  <div class="section">
+    <h2>Add Item to Closet</h2>
+    <input type="file" id="fileInput"><br>
+    <input type="text" id="labelInput" placeholder="Label (e.g., black hoodie)"><br>
+    <select id="categorySelect">
+      <option value="top">Top</option>
+      <option value="bottom">Bottom</option>
+      <option value="shoes">Shoes</option>
+      <option value="hat">Hat</option>
+      <option value="socks">Socks</option>
+      <option value="accessory">Accessory</option>
+    </select>
+    <input type="text" id="subcategoryInput" placeholder="Subcategory (e.g., hoodie, tee, jeans)">
+    <button onclick="addItem()">Add to Closet</button>
+  </div>
+
+  <div class="section">
+    <h2>Your Closet</h2>
+    <div id="closetDisplay" class="swipe-container"></div>
+  </div>
+
+  <script>
+    // Check for first-time user
+    if (!localStorage.getItem("seenWelcome")) {
+      document.getElementById("welcomeModal").classList.remove("hidden");
+    } else {
+      document.getElementById("welcomeModal").style.display = "none";
+    }
+
+    function closeWelcome() {
+      localStorage.setItem("seenWelcome", true);
+      document.getElementById("welcomeModal").style.display = "none";
+    }
+
+    const closet = JSON.parse(localStorage.getItem('closet') || "[]");
+
+    function addItem() {
+      const fileInput = document.getElementById('fileInput');
+      const label = document.getElementById('labelInput').value;
+      const category = document.getElementById('categorySelect').value;
+      const subcategory = document.getElementById('subcategoryInput').value;
+
+      if (!fileInput.files[0] || !label) return alert("Please select an image and add a label.");
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        closet.push({
+          label,
+          category,
+          subcategory,
+          src: e.target.result
+        });
+        localStorage.setItem("closet", JSON.stringify(closet));
+        renderCloset();
+      };
+      reader.readAsDataURL(fileInput.files[0]);
+    }
+
+    function renderCloset() {
+      const display = document.getElementById("closetDisplay");
+      display.innerHTML = "";
+      closet.forEach(item => {
+        const div = document.createElement("div");
+        div.className = "swipe-card";
+        div.innerHTML = \`<img src="\${item.src}" alt="\${item.label}" title="\${item.label}">\`;
+        display.appendChild(div);
+      });
+    }
+
+    renderCloset();
+  </script>
+</body>
+</html>
