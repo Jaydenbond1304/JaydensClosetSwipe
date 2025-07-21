@@ -1,0 +1,191 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Jayden's Closet Swipe</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f4f4f8;
+      color: #333;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 1rem;
+    }
+    h1 {
+      font-size: 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+    .section {
+      margin-bottom: 1rem;
+      width: 100%;
+      max-width: 600px;
+    }
+    .row {
+      display: flex;
+      overflow-x: auto;
+      gap: 1rem;
+      padding: 0.5rem;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .item {
+      flex: 0 0 auto;
+      width: 100px;
+      text-align: center;
+      cursor: pointer;
+    }
+    .item img {
+      width: 100%;
+      height: auto;
+      border-radius: 8px;
+      border: 2px solid transparent;
+      transition: border-color 0.2s;
+    }
+    .item img.selected {
+      border-color: #007bff;
+    }
+    #log {
+      white-space: pre-wrap;
+      font-size: 0.8rem;
+      color: #666;
+      margin-top: 1rem;
+      max-width: 600px;
+    }
+    .footer {
+      font-size: 0.75rem;
+      color: #999;
+      margin-top: 2rem;
+    }
+  </style>
+</head>
+<body>
+
+<h1>Jayden's Closet Swipe 👕👖👟</h1>
+
+<div class="section">
+  <input type="file" id="fileInput" accept="image/*">
+  <input type="text" id="labelInput" placeholder="Item name">
+  <select id="categorySelect">
+    <option value="hat">Hat</option>
+    <option value="top">Top</option>
+    <option value="bottom">Bottom</option>
+    <option value="shoes">Shoes</option>
+  </select>
+  <button onclick="addToCloset()">Add to Closet</button>
+  <div id="uploadStatus"></div>
+</div>
+
+<div class="section" id="swipeBuilder"></div>
+
+<div class="section">
+  <input type="text" id="aiPrompt" placeholder="Enter outfit vibe (e.g. casual date night)">
+  <button onclick="generateAIOutfit()">Generate AI Outfit</button>
+  <div id="aiResponse"></div>
+</div>
+
+<div id="log"></div>
+
+<div class="footer">
+  Beta version – report bugs to Jayden at jaydenbond1304@gmail.com
+</div>
+
+<script>
+let closet = JSON.parse(localStorage.getItem('closet') || "[]");
+
+function log(msg) {
+  document.getElementById('log').textContent += msg + "\n";
+  console.log(msg);
+}
+
+function saveCloset() {
+  localStorage.setItem('closet', JSON.stringify(closet));
+}
+
+function addToCloset() {
+  const fileInput = document.getElementById('fileInput');
+  const label = document.getElementById('labelInput').value;
+  const category = document.getElementById('categorySelect').value;
+  const status = document.getElementById('uploadStatus');
+
+  if (!fileInput.files[0]) return alert("Choose an image");
+  if (!label) return alert("Enter item name");
+
+  const reader = new FileReader();
+  status.textContent = "Removing background...";
+  reader.onload = function(e) {
+    // Simulated background removal
+    const newItem = {
+      label,
+      category,
+      src: e.target.result
+    };
+    closet.push(newItem);
+    saveCloset();
+    status.textContent = "Item added!";
+    renderCloset();
+  };
+  reader.readAsDataURL(fileInput.files[0]);
+}
+
+function renderCloset() {
+  const builder = document.getElementById('swipeBuilder');
+  builder.innerHTML = '';
+
+  const categories = ['hat', 'top', 'bottom', 'shoes'];
+  categories.forEach(cat => {
+    const rowDiv = document.createElement('div');
+    rowDiv.className = 'row';
+
+    closet.filter(item => item.category === cat).forEach(item => {
+      const div = document.createElement('div');
+      div.className = 'item';
+      div.innerHTML = `<img src="${item.src}" title="${item.label}"><div>${item.label}</div>`;
+      rowDiv.appendChild(div);
+    });
+
+    if (rowDiv.children.length > 0) {
+      const section = document.createElement('div');
+      section.className = 'section';
+      section.innerHTML = `<strong>${cat.toUpperCase()}</strong>`;
+      section.appendChild(rowDiv);
+      builder.appendChild(section);
+    }
+  });
+}
+
+function generateAIOutfit() {
+  const prompt = document.getElementById('aiPrompt').value.toLowerCase();
+  const aiResponse = document.getElementById('aiResponse');
+
+  if (!prompt) return alert("Enter an outfit vibe first");
+
+  const outfit = {};
+  const categories = ['hat', 'top', 'bottom', 'shoes'];
+  categories.forEach(cat => {
+    const items = closet.filter(item => item.category === cat);
+    if (items.length > 0) {
+      outfit[cat] = items[Math.floor(Math.random() * items.length)];
+    }
+  });
+
+  let response = `Here's a vibe for "${prompt}":
+`;
+  categories.forEach(cat => {
+    if (outfit[cat]) response += `– ${cat}: ${outfit[cat].label}
+`;
+  });
+
+  aiResponse.textContent = response;
+}
+
+renderCloset();
+</script>
+
+</body>
+</html>
